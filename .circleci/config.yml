@@ -1,0 +1,196 @@
+defaults: &defaults
+  working_directory: ~/code
+  docker:
+    - image: circleci/node:12.16.1
+
+whitelist: &whitelist
+  paths:
+    - __tests__/*
+    - lib/*
+    - coverage/*
+    - mocks/*
+    - reports/*
+    - node_modules/*
+    - src/*
+    - .npmignore
+    - jest.config.js
+    - jest.setup.js
+    - LICENSE
+    - package.json
+    - README.md
+    - tsconfig.json
+    - tsconfig.build.json
+    - tslint.json
+
+version: 2
+
+jobs:
+  checkout:
+    <<: *defaults
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+
+      - run:
+          name: Install Dependencies
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - persist_to_workspace:
+          root: ~/code
+          <<: *whitelist
+
+  lint:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          at: ~/code
+
+      - run:
+          name: Lint TypeScript code
+          command: npm run lint
+
+  test:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          at: ~/code
+
+      - run:
+          name: Test TypeScript code
+          command: npm run test:coverage:ci
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: "reports"
+
+      - store_test_results:
+          path: "reports/junit.xml"
+
+      - persist_to_workspace:
+          root: ~/code
+          <<: *whitelist
+
+  coveralls:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          at: ~/code
+
+      - run:
+          name: Submit coverage report to Coveralls.io
+          command: npm run coveralls
+
+  build:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          at: ~/code
+
+      - run:
+          name: Build TypeScript code
+          command: npm run build
+
+      - persist_to_workspace:
+          root: ~/code
+          <<: *whitelist
+
+  deploy:
+    <<: *defaults
+
+    steps:
+      - attach_workspace:
+          at: ~/code
+
+      - run:
+          name: Write NPM Token to ~/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+
+      - run:
+          name: Install dot-json package
+          command: npm install dot-json
+
+      - run:
+          name: Write version to package.json
+          command: $(npm bin)/dot-json package.json version ${CIRCLE_TAG:1}
+
+      - run:
+          name: Publish to NPM
+          command: npm publish --access=public
+
+workflows:
+  version: 2
+
+  test:
+    jobs:
+      - checkout
+      - test:
+          requires:
+            - checkout
+      - lint:
+          requires:
+            - checkout
+      - coveralls:
+          requires:
+            - test
+
+  release:
+    jobs:
+      - checkout:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+      - test:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - checkout
+      - lint:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - checkout
+      - coveralls:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - test
+      - build:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - test
+            - lint
+      - deploy:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build
