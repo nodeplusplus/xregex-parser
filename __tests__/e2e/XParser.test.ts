@@ -8,7 +8,6 @@ import XParser, {
   JSONParser,
   IXParser,
   IXParserSchema,
-  IXParserHelpers,
   ILogger,
   GenericObject,
   XParserEngine,
@@ -41,7 +40,6 @@ const json: GenericObject = {
 describe("XParser", () => {
   const container = new Container();
   let parser: IXParser;
-  const merge = jest.fn((prev, cur) => prev || cur);
   const filter = {
     start: jest.fn(),
     stop: jest.fn(),
@@ -51,7 +49,6 @@ describe("XParser", () => {
   };
 
   beforeAll(async () => {
-    container.bind<IXParserHelpers>("HELPERS").toConstantValue({ merge });
     container.bind<ILogger>("LOGGER").toConstantValue(logger);
     container.bind<any>("XFILTER").toConstantValue(filter);
     container.bind<IXParser>("XPARSER_ENGINE_HTML").to(HTMLParser);
@@ -65,7 +62,6 @@ describe("XParser", () => {
   });
 
   beforeEach(() => {
-    merge.mockClear();
     filter.start.mockClear();
     filter.stop.mockClear();
     filter.exec.mockClear();

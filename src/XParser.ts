@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { injectable, inject } from "inversify";
 
-import { IXParserHelpers, ILogger, GenericObject } from "./types/Common";
+import { ILogger, GenericObject } from "./types/Common";
 import {
   XParserEngine,
   IXParser,
@@ -11,10 +11,10 @@ import {
   IXParserSchemaItem,
   IXParserPropsSchema,
 } from "./types/XParser";
+import { merge } from "./helpers/merge";
 
 @injectable()
 export class XParser implements IXParser {
-  @inject("HELPERS") private helpers!: IXParserHelpers;
   @inject("LOGGER") private logger!: ILogger;
   @inject("XFILTER") private filter!: IXParserFilter;
   @inject("XPARSER_ENGINE_HTML") private html!: IXParser;
@@ -118,7 +118,7 @@ export class XParser implements IXParser {
       }
 
       this.logger.debug("XPARSER:PARSE_ITEMS.USE_AND_ALGO");
-      return this.helpers.merge(prev, res);
+      return merge(prev, res);
     }, Promise.resolve(null));
   }
 
