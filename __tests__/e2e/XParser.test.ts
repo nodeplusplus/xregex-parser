@@ -1,5 +1,5 @@
 import fs from "fs";
-import path, { parse } from "path";
+import path from "path";
 import faker from "faker";
 import { Container } from "inversify";
 
@@ -12,6 +12,7 @@ import XParser, {
   GenericObject,
   XParserEngine,
 } from "../../src/";
+import Factory from "../../src/Factory";
 
 const logger = require("../../mocks/logger");
 const html = fs.readFileSync(
@@ -38,33 +39,18 @@ const json: GenericObject = {
 };
 
 describe("XParser", () => {
-  const container = new Container();
   let parser: IXParser;
-  const filter = {
-    start: jest.fn(),
-    stop: jest.fn(),
-    exec: jest.fn((data: any) => [
-      { $filtered$: Number(data[0]["$filtered$"]) || 0 },
-    ]),
-  };
 
   beforeAll(async () => {
+    let container = new Container();
     container.bind<ILogger>("LOGGER").toConstantValue(logger);
-    container.bind<any>("XFILTER").toConstantValue(filter);
-    container.bind<IXParser>("XPARSER_ENGINE_HTML").to(HTMLParser);
-    container.bind<IXParser>("XPARSER_ENGINE_JSON").to(JSONParser);
+    container = Factory.createSimple(container);
 
     parser = container.resolve<IXParser>(XParser);
     await parser.start();
   });
   afterAll(async () => {
     await parser.stop();
-  });
-
-  beforeEach(() => {
-    filter.start.mockClear();
-    filter.stop.mockClear();
-    filter.exec.mockClear();
   });
 
   describe("exec", () => {

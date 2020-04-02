@@ -1,11 +1,11 @@
 import _ from "lodash";
 import { injectable, inject } from "inversify";
+import { IXFilter } from "@nodeplusplus/xregex-filter";
 
 import { ILogger, GenericObject } from "./types/Common";
 import {
   XParserEngine,
   IXParser,
-  IXParserFilter,
   IXParserExecOpts,
   IXParserSchema,
   IXParserSchemaItem,
@@ -16,7 +16,7 @@ import { merge } from "./helpers/merge";
 @injectable()
 export class XParser implements IXParser {
   @inject("LOGGER") private logger!: ILogger;
-  @inject("XFILTER") private filter!: IXParserFilter;
+  @inject("XFILTER") private filter!: IXFilter;
   @inject("XPARSER_ENGINE_HTML") private html!: IXParser;
   @inject("XPARSER_ENGINE_JSON") private json!: IXParser;
 

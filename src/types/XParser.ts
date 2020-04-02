@@ -1,4 +1,4 @@
-import { GenericObject } from "./Common";
+import { IXFilterSchemaItem } from "@nodeplusplus/xregex-filter";
 
 export interface IXParser {
   start(opts?: any): Promise<void>;
@@ -41,18 +41,5 @@ export interface IXParserSchemaItem {
   prop?: string;
 
   or?: boolean;
-  filters?: IXParserSchemaFilterItem[];
-}
-
-export interface IXParserFilter {
-  start(opts?: any): Promise<void>;
-  stop(opts?: any): Promise<void>;
-
-  exec<T extends GenericObject>(data: any[], opts: any): Promise<T[]>;
-}
-
-export interface IXParserSchemaFilterItem {
-  id: string;
-  priority: number;
-  opts?: any;
+  filters?: IXFilterSchemaItem[];
 }
