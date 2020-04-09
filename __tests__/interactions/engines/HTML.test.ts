@@ -2,16 +2,18 @@ import fs from "fs";
 import path from "path";
 import faker from "faker";
 import { Container } from "inversify";
-
 import {
   ILogger,
+  createSilent as createLogger,
+} from "@nodeplusplus/xregex-logger";
+
+import {
   IXParser,
   IXParserExecOpts,
   HTMLParser,
   XParserReserved,
 } from "../../../src";
 
-const logger = require("../../../mocks/logger");
 const data = fs.readFileSync(
   path.resolve(__dirname, "../../../mocks/data.html"),
   "utf8"
@@ -22,7 +24,7 @@ describe("engines.HTMLParser", () => {
 
   beforeAll(async () => {
     const container = new Container();
-    container.bind<ILogger>("LOGGER").toConstantValue(logger);
+    container.bind<ILogger>("LOGGER").toConstantValue(createLogger());
 
     parser = container.resolve<IXParser>(HTMLParser);
     await parser.start();

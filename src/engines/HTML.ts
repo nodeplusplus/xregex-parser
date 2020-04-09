@@ -1,8 +1,8 @@
 import _ from "lodash";
 import cheerio from "cheerio";
 import { injectable, inject } from "inversify";
+import { ILogger } from "@nodeplusplus/xregex-logger";
 
-import { ILogger } from "../types/Common";
 import {
   XParserReserved,
   IXParser,

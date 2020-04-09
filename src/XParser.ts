@@ -1,8 +1,9 @@
 import _ from "lodash";
 import { injectable, inject } from "inversify";
+import { ILogger } from "@nodeplusplus/xregex-logger";
 import { IXFilter } from "@nodeplusplus/xregex-filter";
 
-import { ILogger, GenericObject } from "./types/Common";
+import { GenericObject } from "./types/Common";
 import {
   XParserEngine,
   IXParser,

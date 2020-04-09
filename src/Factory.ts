@@ -1,20 +1,17 @@
 import { Container } from "inversify";
+import {
+  ILogger,
+  createConsole as createLogger,
+} from "@nodeplusplus/xregex-logger";
 import XFilter from "@nodeplusplus/xregex-filter";
 
-import { ILogger, IXParser } from "./types";
+import { IXParser } from "./types";
 import { HTMLParser, JSONParser } from "./engines";
 
 class Factory {
   createSimple(container = new Container()): Container {
     if (!container.isBound("LOGGER")) {
-      container.bind<ILogger>("LOGGER").toConstantValue({
-        fatal: console.log,
-        error: console.error,
-        warn: console.warn,
-        info: console.info,
-        debug: console.debug,
-        trace: console.trace,
-      });
+      container.bind<ILogger>("LOGGER").toConstantValue(createLogger());
     }
     if (!container.isBound("SETTINGS")) {
       container.bind<any>("SETTINGS").toConstantValue({});

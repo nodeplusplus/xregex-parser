@@ -1,8 +1,11 @@
 import faker from "faker";
 import { Container } from "inversify";
-
 import {
   ILogger,
+  createSilent as createLogger,
+} from "@nodeplusplus/xregex-logger";
+
+import {
   IXParser,
   IXParserExecOpts,
   JSONParser,
@@ -10,14 +13,12 @@ import {
   XParserReserved,
 } from "../../../src";
 
-const logger = require("../../../mocks/logger");
-
 describe("engines.JSONParser", () => {
   let parser: IXParser;
 
   beforeAll(async () => {
     const container = new Container();
-    container.bind<ILogger>("LOGGER").toConstantValue(logger);
+    container.bind<ILogger>("LOGGER").toConstantValue(createLogger());
 
     parser = container.resolve<IXParser>(JSONParser);
     await parser.start();
