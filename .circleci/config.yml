@@ -57,6 +57,10 @@ jobs:
           at: ~/code
 
       - run:
+          name: Validate source code
+          command: npm run validate
+
+      - run:
           name: Lint TypeScript code
           command: npm run lint
 
