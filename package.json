@@ -1,6 +1,6 @@
 {
   "name": "@nodeplusplus/xregex-parser",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Extract your data from any source",
   "main": "lib/index.js",
   "scripts": {
