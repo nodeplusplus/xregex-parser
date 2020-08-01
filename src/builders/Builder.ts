@@ -1,17 +1,22 @@
 import { Container, interfaces } from "inversify";
 import _ from "lodash";
-import { ILogger } from "@nodeplusplus/xregex-logger";
+import xhelpers from "@nodeplusplus/xregex-helpers";
 
 import { IBuilder, IXParser, GenericObject } from "../types";
 
 export class Builder implements IBuilder {
   private container!: interfaces.Container;
+  private options: interfaces.ContainerOptions = { defaultScope: "Singleton" };
 
   public reset() {
-    this.container = new Container({ defaultScope: "Singleton" });
+    this.container = new Container(this.options);
   }
   public merge(container: interfaces.Container) {
-    this.container = Container.merge(this.container, container);
+    this.container = xhelpers.inversify.merge(
+      this.container,
+      container,
+      this.options
+    );
   }
 
   public setXParser(
