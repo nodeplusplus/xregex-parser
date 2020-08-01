@@ -9,7 +9,7 @@ import { XParser } from "../XParser";
 import { HTMLParser, JSONParser } from "../engines";
 
 export class Director implements IDirector {
-  constructFromTemplate(builder: IBuilder, template: ITemplate) {
+  public constructFromTemplate(builder: IBuilder, template: ITemplate) {
     builder.reset();
 
     // Merge XFilter container with our container
