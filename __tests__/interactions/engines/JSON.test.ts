@@ -8,10 +8,10 @@ import {
 import {
   IXParser,
   IXParserExecOpts,
-  JSONParser,
   GenericObject,
   XParserReserved,
 } from "../../../src";
+import { JSONParser } from "../../../src/engines";
 
 describe("engines.JSONParser", () => {
   let parser: IXParser;

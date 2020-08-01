@@ -3,7 +3,7 @@ import { injectable, inject } from "inversify";
 import { ILogger } from "@nodeplusplus/xregex-logger";
 import { IXFilter } from "@nodeplusplus/xregex-filter";
 
-import { GenericObject } from "./types/Common";
+import { GenericObject } from "./types";
 import {
   XParserEngine,
   IXParser,
@@ -18,8 +18,8 @@ import { merge } from "./helpers/merge";
 export class XParser implements IXParser {
   @inject("LOGGER") private logger!: ILogger;
   @inject("XFILTER") private filter!: IXFilter;
-  @inject("XPARSER_ENGINE_HTML") private html!: IXParser;
-  @inject("XPARSER_ENGINE_JSON") private json!: IXParser;
+  @inject("XPARSER.ENGINE.HTML") private html!: IXParser;
+  @inject("XPARSER.ENGINE.JSON") private json!: IXParser;
 
   public async start() {
     await Promise.all([

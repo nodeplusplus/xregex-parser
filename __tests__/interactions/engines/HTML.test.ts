@@ -7,12 +7,8 @@ import {
   createSilent as createLogger,
 } from "@nodeplusplus/xregex-logger";
 
-import {
-  IXParser,
-  IXParserExecOpts,
-  HTMLParser,
-  XParserReserved,
-} from "../../../src";
+import { IXParser, IXParserExecOpts, XParserReserved } from "../../../src";
+import { HTMLParser } from "../../../src/engines";
 
 const data = fs.readFileSync(
   path.resolve(__dirname, "../../../mocks/data.html"),

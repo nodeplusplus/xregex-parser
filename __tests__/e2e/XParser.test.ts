@@ -1,59 +1,63 @@
 import fs from "fs";
 import path from "path";
 import faker from "faker";
-import { Container } from "inversify";
-import {
-  ILogger,
-  createSilent as createeLogger,
-} from "@nodeplusplus/xregex-logger";
+import { LoggerType } from "@nodeplusplus/xregex-logger";
 
-import XParser, {
+import {
   IXParser,
   IXParserSchema,
-  GenericObject,
   XParserEngine,
+  Builder,
+  Director,
+  ITemplate,
 } from "../../src/";
-import Factory from "../../src/Factory";
 
-const html = fs.readFileSync(
-  path.resolve(__dirname, "../../mocks/data.html"),
-  "utf8"
-);
-const json: GenericObject = {
-  name: faker.lorem.words(),
-  isActive: faker.random.boolean(),
-  child: {
-    name: faker.lorem.words(),
-    isActive: faker.random.boolean(),
-  },
-  childs: new Array(faker.random.number({ min: 3, max: 10 }))
-    .fill(0)
-    .map(() => ({
-      ...(faker.random.boolean() ? { comments: faker.random.number() } : {}),
-      ...(faker.random.boolean()
-        ? { comment_count: faker.random.number() }
-        : {}),
-      name: faker.lorem.words(),
-      isActive: faker.random.boolean(),
-    })),
+const mocks = {
+  html: fs.readFileSync(
+    path.resolve(__dirname, "../../mocks/data.html"),
+    "utf8"
+  ),
+  json: require(path.resolve(__dirname, "../../mocks/data.js")),
 };
 
 describe("XParser", () => {
-  let parser: IXParser;
+  const template: ITemplate = { logger: { type: LoggerType.SILENT } };
 
-  beforeAll(async () => {
-    let container = new Container();
-    container.bind<ILogger>("LOGGER").toConstantValue(createeLogger());
-    container = Factory.createSimple(container);
+  describe("start/stop", () => {
+    const builder = new Builder();
+    beforeAll(() => {
+      new Director().constructFromTemplate(builder, template);
+    });
 
-    parser = container.resolve<IXParser>(XParser);
-    await parser.start();
-  });
-  afterAll(async () => {
-    await parser.stop();
+    it("should start successful", async () => {
+      const xparser = builder.getXParser();
+      await xparser.start();
+
+      expect(builder.getContainer().isBound("XFILTER")).toBeTruthy();
+    });
+
+    it("should stop as well", async () => {
+      const xparser = builder.getXParser();
+      await xparser.stop();
+
+      expect(builder.getContainer().isBound("XFILTER")).toBeTruthy();
+    });
   });
 
   describe("exec", () => {
+    let parser: IXParser;
+
+    beforeAll(async () => {
+      const builder = new Builder();
+      new Director().constructFromTemplate(builder, template);
+
+      parser = builder.getXParser();
+      await parser.start();
+    });
+    afterAll(async () => {
+      await parser.stop();
+    });
+
     it("should return empty string if data is not truthy", async () => {
       expect(await parser.exec(undefined as any, {})).toBe("");
       expect(await parser.exec(null as any, {})).toBe("");
@@ -61,19 +65,19 @@ describe("XParser", () => {
     });
 
     it("should throw error if schema is not defined", () => {
-      expect(parser.exec(json, undefined as any)).rejects.toThrowError(
+      expect(parser.exec(mocks.json, undefined as any)).rejects.toThrowError(
         /EMPTY_SCHEMA/
       );
-      expect(parser.exec(json, {})).rejects.toThrowError(/EMPTY_SCHEMA/);
+      expect(parser.exec(mocks.json, {})).rejects.toThrowError(/EMPTY_SCHEMA/);
     });
 
     it("should throw error if schema._scope is not defined", () => {
-      expect(parser.exec(json, { schema: {} } as any)).rejects.toThrowError(
-        /EMPTY_SCHEMA_SCOPE/
-      );
-      expect(parser.exec(json, { schema: {} } as any)).rejects.toThrowError(
-        /EMPTY_SCHEMA_SCOPE/
-      );
+      expect(
+        parser.exec(mocks.json, { schema: {} } as any)
+      ).rejects.toThrowError(/EMPTY_SCHEMA_SCOPE/);
+      expect(
+        parser.exec(mocks.json, { schema: {} } as any)
+      ).rejects.toThrowError(/EMPTY_SCHEMA_SCOPE/);
     });
 
     it("should parse non-array as well", async () => {
@@ -85,11 +89,11 @@ describe("XParser", () => {
       };
       const ref = { $context: { id: faker.random.uuid() } };
 
-      const response = await parser.exec(json, { schema, ref });
+      const response = await parser.exec(mocks.json, { schema, ref });
       expect(response).toEqual([
         {
-          name: json.child.name,
-          status: json.child.isActive,
+          name: mocks.json.child.name,
+          status: mocks.json.child.isActive,
           contextId: ref.$context.id,
         },
       ]);
@@ -108,13 +112,13 @@ describe("XParser", () => {
       };
       const ref = { $context: { id: faker.random.uuid() } };
 
-      const response = await parser.exec(json, { schema, ref });
+      const response = await parser.exec(mocks.json, { schema, ref });
       expect(response).toEqual([
         {
           child: {
             contextId: ref.$context.id,
-            name: json.child.name,
-            status: json.child.isActive,
+            name: mocks.json.child.name,
+            status: mocks.json.child.isActive,
           },
         },
       ]);
@@ -133,11 +137,11 @@ describe("XParser", () => {
           comments: [
             {
               selector: "comments",
-              filters: [{ id: "filter.toNumber", priority: 1 }],
+              filters: [{ id: "any.toNumber", priority: 1 }],
             },
             {
               selector: "comment_count",
-              filters: [{ id: "filter.toNumber", priority: 1 }],
+              filters: [{ id: "any.toNumber", priority: 1 }],
               or: true,
             },
           ],
@@ -145,20 +149,20 @@ describe("XParser", () => {
       };
       const ref = { $context: { id: faker.random.uuid() } };
 
-      const [{ childs, ...props }] = (await parser.exec(json, {
+      const [{ childs, ...props }] = (await parser.exec(mocks.json, {
         schema,
         ref,
       })) as any;
 
       expect(props).toEqual({
-        name: json.name,
-        status: json.isActive,
+        name: mocks.json.name,
+        status: mocks.json.isActive,
         contextId: ref.$context.id,
       });
       expect(Array.isArray(childs) && childs.length).toBeTruthy();
 
       for (let child of childs) {
-        const orginalChild = json.childs.find(
+        const orginalChild = mocks.json.childs.find(
           (c: { name: string }) => c.name === child.name
         );
         expect(orginalChild).toBeTruthy();
@@ -183,14 +187,14 @@ describe("XParser", () => {
       const ref = { $context: { id: faker.random.uuid() } };
 
       expect(
-        await parser.exec(json, {
+        await parser.exec(mocks.json, {
           schema,
           ref,
           engine: XParserEngine.HTML,
         })
       ).toEqual([]);
       expect(
-        await parser.exec(html, {
+        await parser.exec(mocks.html, {
           schema,
           ref,
           engine: XParserEngine.JSON,
@@ -200,19 +204,32 @@ describe("XParser", () => {
   });
 
   describe("clean", () => {
+    let parser: IXParser;
+
+    beforeAll(async () => {
+      const builder = new Builder();
+      new Director().constructFromTemplate(builder, template);
+
+      parser = builder.getXParser();
+      await parser.start();
+    });
+    afterAll(async () => {
+      await parser.stop();
+    });
+
     it("should clean data with json", async () => {
       const data = {
-        ...json,
+        ...mocks.json,
         redundant: faker.lorem.words(),
       };
 
       const response = await parser.clean(data, ["redundant"]);
 
-      expect(response).toEqual(json);
+      expect(response).toEqual(mocks.json);
     });
 
     it("should clean data with html", async () => {
-      const response = await parser.clean(html, ["title"]);
+      const response = await parser.clean(mocks.html, ["title"]);
 
       expect(response).not.toEqual(expect.stringContaining("title"));
     });
