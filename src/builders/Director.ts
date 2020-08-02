@@ -6,10 +6,10 @@ import { HTMLParser, JSONParser } from "../engines";
 
 export class Director implements IDirector {
   public constructFromTemplate(builder: IBuilder, template: ITemplate) {
-    builder.registerXFilter(template);
     builder.setLogger(
       createLogger(template.logger.type, template.logger.options)
     );
     builder.setXParser(XParser, { HTML: HTMLParser, JSON: JSONParser });
+    builder.registerXFilter(template);
   }
 }

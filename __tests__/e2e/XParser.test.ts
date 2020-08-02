@@ -244,8 +244,6 @@ describe("XParser", () => {
     it("shouldn't bind component which is bound already", () => {
       const xfilterBuilder = new XFilterBuilder();
       new XFilterDirector().constructFromTemplate(xfilterBuilder, template);
-      // should let our builder bind the logger
-      xfilterBuilder.getContainer().unbind("LOGGER");
 
       const builder = new Builder(xfilterBuilder.getContainer());
       new Director().constructFromTemplate(builder, template);
