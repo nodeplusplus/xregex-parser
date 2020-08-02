@@ -1,24 +1,35 @@
 import { Container, interfaces } from "inversify";
 import _ from "lodash";
-import xhelpers from "@nodeplusplus/xregex-helpers";
+import { ILogger } from "@nodeplusplus/xregex-logger";
+import {
+  ITemplate as IXFilterTemplate,
+  Builder as XFilterBuilder,
+  Director as XFilterDirector,
+} from "@nodeplusplus/xregex-filter";
 
 import { IBuilder, IXParser, GenericObject } from "../types";
 
 export class Builder implements IBuilder {
   private container!: interfaces.Container;
-  private options: interfaces.ContainerOptions = { defaultScope: "Singleton" };
 
-  public reset() {
-    this.container = new Container(this.options);
-  }
-  public merge(container: interfaces.Container) {
-    this.container = xhelpers.inversify.merge(
-      this.container,
-      container,
-      this.options
-    );
+  constructor(container?: interfaces.Container) {
+    this.container = container || new Container({ defaultScope: "Singleton" });
   }
 
+  registerXFilter(template: IXFilterTemplate) {
+    if (this.container.isBound("XFILTER")) return;
+
+    const builder = new XFilterBuilder(this.container);
+    new XFilterDirector().constructFromTemplate(builder, template);
+
+    this.container = builder.getContainer();
+  }
+
+  public setLogger(logger: ILogger) {
+    if (this.container.isBound("LOGGER")) return;
+
+    this.container.bind<ILogger>("LOGGER").toConstantValue(logger);
+  }
   public setXParser(
     Parser: interfaces.Newable<IXParser>,
     engines: GenericObject

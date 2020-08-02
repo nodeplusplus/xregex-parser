@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 import faker from "faker";
-import { LoggerType } from "@nodeplusplus/xregex-logger";
+import { Container } from "inversify";
+import { ILogger, LoggerType } from "@nodeplusplus/xregex-logger";
+import {
+  Builder as XFilterBuilder,
+  Director as XFilterDirector,
+} from "@nodeplusplus/xregex-filter";
 
 import {
   IXParser,
@@ -232,6 +237,21 @@ describe("XParser", () => {
       const response = await parser.clean(mocks.html, ["title"]);
 
       expect(response).not.toEqual(expect.stringContaining("title"));
+    });
+  });
+
+  describe("3rd integration", () => {
+    it("shouldn't bind component which is bound already", () => {
+      const xfilterBuilder = new XFilterBuilder();
+      new XFilterDirector().constructFromTemplate(xfilterBuilder, template);
+      // should let our builder bind the logger
+      xfilterBuilder.getContainer().unbind("LOGGER");
+
+      const builder = new Builder(xfilterBuilder.getContainer());
+      new Director().constructFromTemplate(builder, template);
+
+      expect(builder.getContainer().get("LOGGER")).toBeTruthy();
+      expect(builder.getContainer().get("XFILTER")).toBeTruthy();
     });
   });
 });

@@ -1,13 +1,14 @@
 import { interfaces } from "inversify";
 import { ILogger } from "@nodeplusplus/xregex-logger";
+import { ITemplate as IXFilterTemplate } from "@nodeplusplus/xregex-filter";
 
 import { ITemplate } from "./Template";
 import { IXParser } from "./XParser";
 import { GenericObject } from "./Common";
 
 export interface IBuilder {
-  reset(): void;
-  merge(container: interfaces.Container): void;
+  registerXFilter(template: IXFilterTemplate): void;
+  setLogger(logger: ILogger): void;
   setXParser(
     Parser: interfaces.Newable<IXParser>,
     engines: GenericObject

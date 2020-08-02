@@ -48,7 +48,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@nodeplusplus/xregex-filter": "^1.2.0",
+    "@nodeplusplus/xregex-filter": "^1.2.2",
     "@nodeplusplus/xregex-helpers": "^1.1.0",
     "@nodeplusplus/xregex-logger": "^1.0.0",
     "@types/cheerio": "^0.22.17",
